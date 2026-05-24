@@ -1,0 +1,31 @@
+services:
+  app:
+    image: spring-boot-prod
+    build:
+      # Build context is the project root
+      context: ..
+      dockerfile: docker/prod/Dockerfile
+    container_name: spring-boot-app-prod
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      # Typical overrides for a production-like run; adjust as needed
+      SPRING_PROFILES_ACTIVE: "prod"
+      # Disable devtools if the dependency is present on the classpath
+      SPRING_DEVTOOLS_RESTART_ENABLED: "false"
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-db-prod
+    environment:
+      POSTGRES_DB: battegrounds
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data-prod:/var/lib/postgresql/data
+
+volumes:
+  postgres-data-prod:
+

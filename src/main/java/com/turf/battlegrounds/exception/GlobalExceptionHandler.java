@@ -1,0 +1,45 @@
+package com.turf.battlegrounds.exception;
+
+import com.turf.battlegrounds.dto.ApiResponse;
+import com.turf.battlegrounds.dto.ErrorDetails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import jakarta.servlet.http.HttpServletRequest;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiResponse<ErrorDetails>> handleNotFound(UserNotFoundException ex, HttpServletRequest req) {
+        log.warn("Resource not found: {}", ex.getMessage());
+        ErrorDetails details = new ErrorDetails(
+                ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                req.getRequestURI()
+        );
+        ApiResponse<ErrorDetails> body = new ApiResponse<>(HttpStatus.NOT_FOUND.value(), "error", ex.getMessage(), details);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<ErrorDetails>> handleGeneric(Exception ex, HttpServletRequest req) {
+        log.error("Unhandled exception", ex);
+        ErrorDetails details = new ErrorDetails(
+                ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                req.getRequestURI()
+        );
+        ApiResponse<ErrorDetails> body = new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "error", "An unexpected error occurred", details);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+}

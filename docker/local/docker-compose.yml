@@ -1,0 +1,53 @@
+services:
+  battlegrounds-app:
+    image: spring-boot-dev
+    build:
+      context: ../../
+      dockerfile: docker/local/Dockerfile
+    container_name: spring-boot-app
+    ports:
+      - "8008:8080"
+      - "5007:5007"
+    volumes:
+      - ../../src:/app/src
+      - ../../pom.xml:/app/pom.xml
+      - maven-cache:/root/.m2
+      - ../../logs:/app/logs
+    depends_on:
+      - postgres
+    networks:
+      - spring-network
+    environment:
+      SPRING_PROFILES_ACTIVE: "local"
+      DB_HOST: "postgres"
+      DB_NAME: "battlegrounds"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "1000"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "400"
+      LOCAL_UID: "${UID:-1000}"
+      LOCAL_GID: "${GID:-1000}"
+      LOG_PATH: "/app/logs"
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: battegrounds
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - spring-network
+
+volumes:
+  postgres-data:
+  maven-cache:
+
+networks:
+  spring-network:
+    driver: bridge
