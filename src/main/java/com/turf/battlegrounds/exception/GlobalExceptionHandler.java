@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.ZonedDateTime;
@@ -27,6 +28,20 @@ public class GlobalExceptionHandler {
                 req.getRequestURI()
         );
         ApiResponse<ErrorDetails> body = new ApiResponse<>(HttpStatus.NOT_FOUND.value(), "error", ex.getMessage(), details);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ApiResponse<ErrorDetails>> handleNoHandlerFound(NoHandlerFoundException ex, HttpServletRequest req) {
+        log.warn("Page not found: {} {}", req.getMethod(), req.getRequestURI());
+        ErrorDetails details = new ErrorDetails(
+                ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                req.getRequestURI()
+        );
+        String message = "Page not found";
+        ApiResponse<ErrorDetails> body = new ApiResponse<>(HttpStatus.NOT_FOUND.value(), "error", message, details);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
