@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.ZonedDateTime;
@@ -59,6 +60,23 @@ public class GlobalExceptionHandler {
                 req.getRequestURI()
         );
         ApiResponse<ErrorDetails> body = new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), "error", message, details);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<ErrorDetails>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpServletRequest req) {
+        log.warn("Request body not readable: {}", ex.getMessage());
+        String msg = ex.getMessage();
+        if (msg == null || msg.contains("Required request body is missing")) {
+            msg = "Required request body is missing";
+        }
+        ErrorDetails details = new ErrorDetails(
+                ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                req.getRequestURI()
+        );
+        ApiResponse<ErrorDetails> body = new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), "error", msg, details);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
