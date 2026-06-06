@@ -2,13 +2,13 @@ package com.turf.battlegrounds.user;
 
 import com.turf.battlegrounds.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-class UserService {
+public class UserService {
     @Autowired
     private UserRepository userRepository;
 
@@ -21,6 +21,18 @@ class UserService {
     public List<UserResponseDto> getAllUsers()
     {
         return userRepository.findAll().stream().map(UserMapper::toDto).toList();
+    }
+
+    public UserResponseDto createUser(UserRequestDTO userRequestDTO)
+    {
+        BCryptPasswordEncoder encoder =
+                new BCryptPasswordEncoder();
+        User user = new User();
+        user.setUsername(userRequestDTO.getUsername());
+        user.setEmail(userRequestDTO.getEmail());
+        user.setPhone_no(userRequestDTO.getPhone_no());
+        user.setPassword(encoder.encode(userRequestDTO.getPassword()));
+        return UserMapper.toDto(userRepository.save(user));
     }
 
 }

@@ -22,8 +22,12 @@ WORKDIR /app
 # Copy runnable jar from builder image
 COPY --from=builder /app/target/*.jar app.jar
 
+# Copy entrypoint script that will load docker secrets into env vars
+COPY docker/prod/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 EXPOSE 8080
 
-# Use a minimal entrypoint suitable for production
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Use the entrypoint script which sets env vars from secrets and starts the app
+ENTRYPOINT ["/app/entrypoint.sh"]
 

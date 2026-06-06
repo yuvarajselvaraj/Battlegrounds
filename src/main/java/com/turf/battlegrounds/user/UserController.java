@@ -1,19 +1,17 @@
 package com.turf.battlegrounds.user;
 
 import com.turf.battlegrounds.dto.ApiResponse;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("api/v1/users")
 public class UserController {
 
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
@@ -34,5 +32,13 @@ public class UserController {
         List<UserResponseDto> users= userService.getAllUsers();
         ApiResponse<List<UserResponseDto>> user = new ApiResponse<>(200, "success", "User Details Fetched Successfully", users);
         return ResponseEntity.ok(user);
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<UserResponseDto>> createUser(@Valid @RequestBody UserRequestDTO userRequest)
+    {
+        UserResponseDto user = userService.createUser(userRequest);
+        ApiResponse<UserResponseDto> userResponse = new ApiResponse<>(201, "success", "User Created successfully", user);
+        return ResponseEntity.ok(userResponse);
     }
 }

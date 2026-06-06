@@ -1,6 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Load all docker secrets (files in /run/secrets) into environment variables
+if [ -d /run/secrets ]; then
+  for f in /run/secrets/*; do
+    [ -f "$f" ] || continue
+    name=$(basename "$f")
+    # export with the same name; trim CRLF
+    val=$(cat "$f")
+    export "$name"="$val"
+  done
+fi
+
+# Map secrets to Spring Boot expected environment variables if they were loaded
+[ -n "${DB_USER:-}" ] && export SPRING_DATASOURCE_USERNAME="$DB_USER"
+[ -n "${DB_PASSWORD:-}" ] && export SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD"
+# DB_NAME and JWT_SECRET are used directly via ${DB_NAME} and ${JWT_SECRET} in properties
+
 cd /app
 
 # Ensure logs directory exists and create today's dated logfile and app.log; set ownership to host user

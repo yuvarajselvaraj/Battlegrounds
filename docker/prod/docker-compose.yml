@@ -9,12 +9,12 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Production profile and runtime overrides
+      # Typical overrides for a production-like run; adjust as needed
       SPRING_PROFILES_ACTIVE: "prod"
+      # Disable devtools if the dependency is present on the classpath
       SPRING_DEVTOOLS_RESTART_ENABLED: "false"
-      # Use external Postgres host for production. Set DB_HOST (and optionally DB_PORT) via environment or a .env file.
-      DB_HOST: "${DB_HOST:-postgres.example.com}"
-      DB_PORT: "${DB_PORT:-5432}"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
     secrets:
       - DB_NAME
       - DB_USER
@@ -31,4 +31,7 @@ secrets:
     file: ../secrets/db_password
   JWT_SECRET:
     file: ../secrets/jwt_secret
+
+volumes:
+  postgres-data-prod:
 

@@ -20,15 +20,17 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: "local"
       DB_HOST: "postgres"
-      DB_NAME: "battlegrounds"
-      DB_USER: "postgres"
-      DB_PASSWORD: "postgres"
       SPRING_DEVTOOLS_RESTART_ENABLED: "true"
       SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "1000"
       SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "400"
       LOCAL_UID: "${UID:-1000}"
       LOCAL_GID: "${GID:-1000}"
       LOG_PATH: "/app/logs"
+    secrets:
+      - DB_NAME
+      - DB_USER
+      - DB_PASSWORD
+      - JWT_SECRET
 
   postgres:
     image: postgres:16-alpine
@@ -36,13 +38,27 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: battegrounds
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB_FILE: /run/secrets/DB_NAME
+      POSTGRES_USER_FILE: /run/secrets/DB_USER
+      POSTGRES_PASSWORD_FILE: /run/secrets/DB_PASSWORD
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - spring-network
+    secrets:
+      - DB_NAME
+      - DB_USER
+      - DB_PASSWORD
+
+secrets:
+  DB_NAME:
+    file: ../secrets/db_name
+  DB_USER:
+    file: ../secrets/db_user
+  DB_PASSWORD:
+    file: ../secrets/db_password
+  JWT_SECRET:
+    file: ../secrets/jwt_secret
 
 volumes:
   postgres-data:

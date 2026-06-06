@@ -57,12 +57,12 @@ public class GlobalExceptionHandler {
         String message = errors.isEmpty() ? "Validation failed" : String.join("; ", errors);
         ErrorDetails details = new ErrorDetails(
                 ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase(),
                 req.getRequestURI()
         );
-        ApiResponse<ErrorDetails> body = new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), "error", message, details);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        ApiResponse<ErrorDetails> body = new ApiResponse<>(HttpStatus.UNPROCESSABLE_ENTITY.value(), "error", message, details);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -92,6 +92,33 @@ public class GlobalExceptionHandler {
         );
         ApiResponse<ErrorDetails> body = new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), "error", msg, details);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<ErrorDetails>> handleAccessDenied(org.springframework.security.access.AccessDeniedException ex, HttpServletRequest req) {
+        log.warn("Access denied: {}", ex.getMessage());
+        ErrorDetails details = new ErrorDetails(
+                ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                HttpStatus.FORBIDDEN.value(),
+                HttpStatus.FORBIDDEN.getReasonPhrase(),
+                req.getRequestURI()
+        );
+        ApiResponse<ErrorDetails> body = new ApiResponse<>(HttpStatus.FORBIDDEN.value(), "error", "Forbidden", details);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<ApiResponse<ErrorDetails>> handleAuthenticationException(org.springframework.security.core.AuthenticationException ex, HttpServletRequest req) {
+        log.warn("Authentication failed: {}", ex.getMessage());
+        String message = ex.getMessage() == null ? "Unauthorized" : ex.getMessage();
+        ErrorDetails details = new ErrorDetails(
+                ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                HttpStatus.UNAUTHORIZED.value(),
+                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                req.getRequestURI()
+        );
+        ApiResponse<ErrorDetails> body = new ApiResponse<>(HttpStatus.UNAUTHORIZED.value(), "error", message, details);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 
     @ExceptionHandler(Exception.class)
