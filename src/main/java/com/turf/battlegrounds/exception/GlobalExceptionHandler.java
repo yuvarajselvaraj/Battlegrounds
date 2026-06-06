@@ -45,6 +45,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<ErrorDetails>> handleValidation(org.springframework.web.bind.MethodArgumentNotValidException ex, HttpServletRequest req) {
+        log.warn("Validation failed: {}", ex.getMessage());
+        java.util.List<String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                .collect(java.util.stream.Collectors.toList());
+        String message = errors.isEmpty() ? "Validation failed" : String.join("; ", errors);
+        ErrorDetails details = new ErrorDetails(
+                ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                req.getRequestURI()
+        );
+        ApiResponse<ErrorDetails> body = new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), "error", message, details);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<ErrorDetails>> handleGeneric(Exception ex, HttpServletRequest req) {
         log.error("Unhandled exception", ex);
