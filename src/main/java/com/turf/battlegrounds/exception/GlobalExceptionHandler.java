@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.ZonedDateTime;
@@ -66,9 +68,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<ErrorDetails>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpServletRequest req) {
         log.warn("Request body not readable: {}", ex.getMessage());
-        String msg = ex.getMessage();
-        if (msg == null || msg.contains("Required request body is missing")) {
-            msg = "Required request body is missing";
+        String msg;
+        Throwable root = ex.getMostSpecificCause();
+        if (root instanceof JsonParseException) {
+            JsonParseException jpe = (JsonParseException) root;
+            com.fasterxml.jackson.core.JsonLocation loc = jpe.getLocation();
+            String locInfo = loc != null ? " at line " + loc.getLineNr() + " column " + loc.getColumnNr() : "";
+            msg = "JSON parse error: " + jpe.getOriginalMessage() + locInfo;
+        } else if (root instanceof JsonMappingException) {
+            JsonMappingException jme = (JsonMappingException) root;
+            msg = "JSON mapping error: " + jme.getOriginalMessage();
+        } else {
+            msg = ex.getMessage();
+            if (msg == null || msg.contains("Required request body is missing")) {
+                msg = "Required request body is missing";
+            }
         }
         ErrorDetails details = new ErrorDetails(
                 ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
