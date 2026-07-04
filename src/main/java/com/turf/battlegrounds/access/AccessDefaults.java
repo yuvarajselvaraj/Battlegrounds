@@ -3,6 +3,7 @@ package com.turf.battlegrounds.access;
 import java.util.List;
 
 public final class AccessDefaults {
+    // Define role name constants exactly as they are saved in your database
     public static final String USER_ROLE = "ROLE_USER";
     public static final String ADMIN_ROLE = "ROLE_ADMIN";
     public static final String SUPER_ADMIN_ROLE = "ROLE_SUPER_ADMIN";
@@ -12,35 +13,40 @@ public final class AccessDefaults {
                     USER_ROLE,
                     "Default authenticated user",
                     List.of(
-                            "PROFILE_READ",
-                            "PROFILE_UPDATE"
+                            "profile:read",
+                            "profile:update"
                     )
             ),
             new RoleDefinition(
                     ADMIN_ROLE,
                     "Application administrator",
                     List.of(
-                            "USER_READ",
-                            "USER_WRITE",
-                            "ROLE_READ",
-                            "PERMISSION_READ"
+                            "profile:read",
+                            "profile:update",
+                            "user:read",
+                            "user:write",
+                            "role:read",
+                            "permission:read"
                     )
             ),
             new RoleDefinition(
                     SUPER_ADMIN_ROLE,
                     "Application super administrator",
                     List.of(
-                            "USER_READ",
-                            "USER_WRITE",
-                            "ROLE_READ",
-                            "ROLE_WRITE",
-                            "PERMISSION_READ",
-                            "PERMISSION_WRITE",
-                            "SYSTEM_SETTINGS_READ",
-                            "SYSTEM_SETTINGS_WRITE"
+                            "profile:read",
+                            "profile:update",
+                            "user:read",
+                            "user:write",
+                            "role:read",
+                            "role:write",
+                            "permission:read",
+                            "permission:write",
+                            "system_settings:read",
+                            "system_settings:write"
                     )
             )
     );
+
 
     private AccessDefaults() {
     }
