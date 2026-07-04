@@ -1,6 +1,5 @@
 package com.turf.battlegrounds.security;
 
-import com.turf.battlegrounds.user.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,6 +57,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/actuator/health").permitAll()
                     .requestMatchers(
                             "/swagger-ui.html",
                             "/swagger-ui/**",
