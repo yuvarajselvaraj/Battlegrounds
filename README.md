@@ -1,53 +1,43 @@
 # Battlegrounds
 
-Spring Boot application for managing users (example project).
+Spring Boot API for user management.
 
-## Requirements
-- Java 21 (dev image uses Eclipse Temurin)
-- Docker & Docker Compose
-- Maven (optional if running outside container)
+## Run locally
 
-## Run (local / development)
-1. Expose host UID/GID for file ownership (created automatically):
-   - docker/local/.env contains UID and GID used by the entrypoint.
-2. Start with compose (local):
-   docker compose -f docker/local/docker-compose.yml up --build -d
-3. App will be available at http://localhost:8008
+```bash
+docker compose -f docker/local/docker-compose.yml up --build -d
+```
 
-## Logging
-- Logs are written to both stdout and files by `logback-spring.xml`.
-- Host-mounted logs directory: `./logs`
-- Files: `app-YYYY-MM-DD.log` (daily rotated) and `app.log` symlink -> today's file.
-- To stream logs on host: `tail -f ./logs/app-$(date +%F).log` or use `docker logs -f spring-boot-app`.
+The API is available at `http://localhost:8008`.
 
-## API responses and error format
-All responses use a common wrapper `ApiResponse<T>`:
-- statusCode (int), status ("success"/"error"), message (String), data (T)
+## Users API
 
-Error payload (`data`) is `ErrorDetails` with fields:
-- timestamp (ISO), status (http code), error (text), path (request URI)
+All endpoints require a JWT access token:
 
-Example error JSON:
-{
-  "statusCode":404,
-  "status":"error",
-  "message":"User Not Found with id: 123",
-  "data":{
-    "timestamp":"2026-05-24T06:26:41+00:00",
-    "status":404,
-    "error":"Not Found",
-    "path":"/users/123"
-  }
-}
+```http
+Authorization: Bearer <access-token>
+```
 
-## Useful commands
-- Restart compose: `docker compose -f docker/local/docker-compose.yml up --build -d`
-- Inspect mounts: `docker inspect spring-boot-app --format '{{json .Mounts}}'`
-- Tail logs: `tail -f logs/app-$(date +%F).log`
+Base path: `/api/v1/users`
 
-## Notes
-- The dev entrypoint creates today's dated logfile and chowns the logs directory to the host UID/GID to make files editable on host.
-- Remove `src/main/java/com/turf/battlegrounds/exception/ErrorResponse.java` if unused.
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/v1/users/{id}` | Get a user by ID. |
+| `GET` | `/api/v1/users` | List all users. |
+| `POST` | `/api/v1/users` | Create a user. |
 
-## Contact
-Maintainers: project repository owner
+### Create a user
+
+```bash
+curl -X POST http://localhost:8008/api/v1/users \
+  -H "Authorization: Bearer <access-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "johndoe",
+    "email": "john@example.com",
+    "phone_no": "9876543210",
+    "password": "Password1!"
+  }'
+```
+
+`username` must be 3–20 characters. `password` must be 8–20 characters and include uppercase, lowercase, numeric, and special characters.
