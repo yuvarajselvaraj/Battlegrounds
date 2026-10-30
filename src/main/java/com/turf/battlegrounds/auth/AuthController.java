@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +18,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,20 +29,22 @@ import jakarta.validation.Valid;
 @Validated
 public class AuthController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider tokenProvider;
+    private final UserDetailsService userDetailsService;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JwtTokenProvider tokenProvider;
-
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public AuthController(
+            UserService userService,
+            AuthenticationManager authenticationManager,
+            JwtTokenProvider tokenProvider,
+            UserDetailsService userDetailsService
+    ) {
+        this.userService = userService;
+        this.authenticationManager = authenticationManager;
+        this.tokenProvider = tokenProvider;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Operation(summary = "Register a new user", description = "Creates a new user account and returns the created user profile.")
     @ApiResponses({
@@ -118,11 +118,11 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<AuthResponse>> refresh(@Valid @RequestBody RefreshRequest req) {
         String refreshToken = req.getRefreshToken();
-        if (!tokenProvider.validateToken(refreshToken)) {
+        if (!tokenProvider.validateRefreshToken(refreshToken)) {
             ApiResponse<AuthResponse> body = new ApiResponse<>(401, "error", "Invalid refresh token", null);
             return ResponseEntity.status(401).body(body);
         }
-        String username = tokenProvider.getUsernameFromToken(refreshToken);
+        String username = tokenProvider.getUsernameFromRefreshToken(refreshToken);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         String access = tokenProvider.generateAccessToken(userDetails);
         String refresh = tokenProvider.generateRefreshToken(userDetails);

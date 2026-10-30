@@ -21,10 +21,14 @@ public class User {
     private Long id;
 
     @NotNull
+    @Column(nullable = false, unique = true)
     private String username;
+
+    @Column(unique = true)
     private String email;
 
     @NotNull
+    @Column(nullable = false, unique = true)
     private String phone_no;
 
     @NotNull

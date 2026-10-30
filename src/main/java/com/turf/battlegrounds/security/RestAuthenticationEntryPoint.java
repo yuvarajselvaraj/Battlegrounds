@@ -34,6 +34,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
         String msg = authException.getMessage() == null ? "Unauthorized" : authException.getMessage();
         ApiResponse<ErrorDetails> body = new ApiResponse<>(HttpStatus.UNAUTHORIZED.value(), "error", msg, details);
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setHeader("WWW-Authenticate", "Bearer");
         response.setContentType("application/json");
         mapper.writeValue(response.getWriter(), body);
     }
